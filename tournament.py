@@ -158,7 +158,7 @@ def custom_tournament(players, num_rounds):
     since each player played N rounds, N * P is double the number of total
     rounds played. (Since if player i plays x rounds with player j rounds, that
     is counted to the total, but player j's x rounds with player i is also
-    counted to the total. However N * P is odd since N and P where initially
+    counted to the total. However N * P is odd since N and P were initially
     odd. So N * P is not divisible by two. A contradiction. QED
     """
     deletePlayers()
@@ -176,7 +176,7 @@ def custom_tournament(players, num_rounds):
     elif num_rounds % 2 == 0:
         even_rounds(ids, num_rounds)
     else:
-        print("impossible to arrange such a tournament")
+        raise ValueError("impossible to arrange such a tournament")
 
 
 def even_players(ids, num_rounds):

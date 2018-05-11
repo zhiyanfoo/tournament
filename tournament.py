@@ -3,7 +3,8 @@
 # tournament.py -- implementation of a Swiss-system tournament
 #
 
-from itertools import islice
+from itertools import islice, combinations
+from random import shuffle
 
 import psycopg2
 import bleach
@@ -131,3 +132,76 @@ def swissPairings():
 
         # skip every second item in the list to avoid duplicate pairs.
         return list(islice(pairs, 0, None, 2))
+
+def round_robin(players):
+    deletePlayers()
+
+    for name in players:
+        registerPlayer(name)
+
+    with connect() as db:
+        c = db.cursor()
+        c.execute("SELECT id FROM standings;")
+        ids = [x[0] for x in c.fetchall()]
+
+    for pair in map(list, combinations(ids, 2)):
+        shuffle(pair)
+        reportMatch(*pair)
+
+
+def custom_tournament(players, num_rounds):
+    """Theorem: If there are P players, where P is odd, and N rounds, where N
+    is odd, then it is impossible to pair up players such that they all play N
+    rounds against each other.
+
+    Proof: Assume for sake of contradiction that such a pairing existed. Then
+    since each player played N rounds, N * P is double the number of total
+    rounds played. (Since if player i plays x rounds with player j rounds, that
+    is counted to the total, but player j's x rounds with player i is also
+    counted to the total. However N * P is odd since N and P where initially
+    odd. So N * P is not divisible by two. A contradiction. QED
+    """
+    deletePlayers()
+
+    for name in players:
+        registerPlayer(name)
+
+    with connect() as db:
+        c = db.cursor()
+        c.execute("SELECT id FROM standings;")
+        ids = [x[0] for x in c.fetchall()]
+
+    if len(ids) % 2 == 0:
+        even_players(ids, num_rounds)
+    elif num_rounds % 2 == 0:
+        even_rounds(ids, num_rounds)
+    else:
+        print("impossible to arrange such a tournament")
+
+
+def even_players(ids, num_rounds):
+    mid = len(ids) // 2
+    for _ in range(num_rounds):
+        shuffle(ids)
+        for pair in zip(ids[:mid], ids[mid:]):
+            reportMatch(*pair)
+
+
+def even_rounds(ids, num_rounds):
+    for _ in range(num_rounds // 2):
+        shuffle(ids)
+        for pair in map(list, zip(ids, ids[1:] + ids[:1])):
+            shuffle(pair)
+            reportMatch(*pair)
+
+print("EVEN PLAYERS")
+custom_tournament("ABCDEFGHIJ", 3)
+print(playerStandings())
+print("EVEN ROUNDS")
+custom_tournament("ABCDEFGHI", 4)
+print(playerStandings())
+print("ODD")
+custom_tournament("ABC", 3)
+print("ROUND ROBIN")
+round_robin("ABCDE")
+print(playerStandings())

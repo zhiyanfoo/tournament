@@ -35,7 +35,6 @@ def deleteMatches():
     with connect() as db:
         c = db.cursor()
         c.execute("UPDATE standings SET wins = 0, matches = 0;")
-        db.commit()
 
 
 def deletePlayers():
@@ -49,7 +48,7 @@ def countPlayers():
     """Returns the number of players currently registered."""
     with connect() as db:
         c = db.cursor()
-        c.execute("SELECT count(*) AS num FROM standings;")
+        c.execute("SELECT count(*) FROM standings;")
         (count,) = c.fetchone()
         return count
 
@@ -67,7 +66,6 @@ def registerPlayer(name):
         c = db.cursor()
         c.execute("INSERT INTO standings (name) VALUES(%s);",
                   [bleach.clean(name)])
-        db.commit()
 
 
 def playerStandings():
@@ -104,7 +102,6 @@ def reportMatch(winner, loser):
         c.execute(
             "UPDATE standings SET matches = matches + 1"
             "WHERE id = {};".format(loser))
-        db.commit()
 
 
 def swissPairings():
